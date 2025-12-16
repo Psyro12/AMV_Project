@@ -511,7 +511,7 @@ $imageManager = new ImageManager();
                     traditional favorites to innovative dishes, our restaurants offer an unparalleled gastronomic
                     journey.
                 </p>
-                <a href="menu.php" class="feature-btn">View Menu</a>
+                <a href=".foods" class="feature-btn">View Menu</a>
             </div>
         </div>
 

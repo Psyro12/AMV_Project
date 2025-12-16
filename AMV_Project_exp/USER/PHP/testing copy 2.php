@@ -1,14 +1,20 @@
 <?php
-// Start the session (Required for booking flow, but not for auth anymore)
+// Start the session
 session_start();
 
 require_once '../PHP/room_includes/includes/ImageManager.php';
-require '../DB-CONNECTIONS/db_connect_2.php';
 
 $imageManager = new ImageManager();
 
-// --- REMOVED AUTHENTICATION CHECK ---
-// Users can now access this page without logging in.
+// Check if the user is logged in
+if (!isset($_SESSION['user'])) {
+    header('Location: login.php');
+    exit();
+}
+require '../DB-CONNECTIONS/db_connect_2.php';
+
+// Get user information from session
+$user = $_SESSION['user'];
 ?>
 
 <!DOCTYPE html>
@@ -23,8 +29,10 @@ $imageManager = new ImageManager();
     <link rel="stylesheet" href="../STYLE/home_page.css">
     <link rel="stylesheet" href="../STYLE/utilities.css">
     <style>
-        /* --- SMOOTH SCROLLING --- */
-        html { scroll-behavior: smooth; }
+        /* --- ADDED: SMOOTH SCROLLING FOR ANCHOR LINKS --- */
+        html {
+            scroll-behavior: smooth;
+        }
 
         /* General Override */
         body {
@@ -92,12 +100,24 @@ $imageManager = new ImageManager();
             transition: color 0.4s ease;
         }
 
-        header.scrolled .logo-text span { color: #333; }
-        header.scrolled .logo-text span:first-child { font-size: 18px; }
-        header.scrolled .logo-text span:last-child { font-size: 12px; }
-        header.scrolled .logo-container img { height: 40px; }
+        header.scrolled .logo-text span {
+            color: #333;
+        }
+        header.scrolled .logo-text span:first-child {
+            font-size: 18px;
+        }
+        header.scrolled .logo-text span:last-child {
+            font-size: 12px;
+        }
 
-        nav { display: flex; align-items: center; }
+        header.scrolled .logo-container img {
+            height: 40px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+        }
 
         nav a {
             text-decoration: none;
@@ -110,36 +130,44 @@ $imageManager = new ImageManager();
             transition: color 0.4s ease, font-size 0.4s ease;
         }
 
-        header.scrolled nav a { color: #333; font-size: .8rem; }
-        nav a:hover { color: #b8860b; }
-
-        /* --- BOOK NOW HEADER BUTTON --- */
-        .btn-header-book {
-            padding: 10px 30px;
-            background-color: transparent;
-            color: #fff;
-            border: 1px solid #fff;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
-            margin-right: 0;
-        }
-
-        .btn-header-book:hover {
-            background-color: #fff;
+        header.scrolled nav a {
             color: #333;
+            font-size: .8rem;
         }
 
-        header.scrolled .btn-header-book {
+        nav a:hover {
             color: #b8860b;
-            border-color: #b8860b;
         }
 
-        header.scrolled .btn-header-book:hover {
-            background-color: #b8860b;
+        
+
+        .nav-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icon-circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
             color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        header.scrolled .icon-circle {
+            color: #555;
+            border: 1px solid #ddd;
+        }
+
+        .icon-circle:hover {
+            background-color: #b8860b;
+            border-color: #b8860b;
+            color: #fff !important;
         }
 
         .burger-menu {
@@ -148,16 +176,28 @@ $imageManager = new ImageManager();
             cursor: pointer;
             display: none;
             transition: color 0.4s ease;
-            margin-left: 20px;
         }
 
-        header.scrolled .burger-menu { color: #333; }
+        header.scrolled .burger-menu {
+            color: #333;
+        }
 
         @media (max-width: 992px) {
-            .desktop-icons { display: none; }
-            .burger-menu { display: block; }
-            header { padding: 20px 20px; }
-            header.scrolled { padding: 15px 20px; }
+            .desktop-icons {
+                display: none;
+            }
+
+            .burger-menu {
+                display: block;
+            }
+
+            header {
+                padding: 20px 20px;
+            }
+
+            header.scrolled {
+                padding: 15px 20px;
+            }
         }
 
         /* --- HERO --- */
@@ -203,22 +243,33 @@ $imageManager = new ImageManager();
             animation: fadeUp 1s ease forwards 0.8s;
         }
 
-        .no-wrap { white-space: nowrap; }
+        .no-wrap {
+            white-space: nowrap;
+        }
 
         @keyframes fadeUp {
-            from { transform: translateY(30px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
 
         /* --- ROOM SLIDER STYLES --- */
         .rooms {
-            background-color: #f8f5f0;
+            /* padding: 80px 0; */
+            background-color: #fff;
             overflow: hidden;
             position: relative;
         }
 
         .room-header-container {
-            padding: 50px 7%;
+            padding: 0 7%;
+            margin-bottom: 60px;
             text-align: center;
         }
 
@@ -232,9 +283,11 @@ $imageManager = new ImageManager();
         .room-gallery-track {
             display: flex;
             gap: 30px;
+            /* Center the active card dynamically */
             padding-left: calc(50% - 300px);
         }
 
+        /* CARD SIZE */
         .room-card-premium {
             flex: 0 0 600px;
             height: 420px;
@@ -243,13 +296,18 @@ $imageManager = new ImageManager();
             display: flex;
             flex-direction: column;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            /* For link */
             color: inherit;
+
+            /* Default state (non-center) */
             transform: scale(0.9);
             opacity: 0.7;
             z-index: 1;
             transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out, box-shadow 0.3s ease;
         }
 
+        /* Active (Center) State */
         .room-card-premium.active {
             transform: scale(1.1);
             opacity: 1;
@@ -271,7 +329,9 @@ $imageManager = new ImageManager();
             transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .room-card-premium:hover .room-image { transform: scale(1.15); }
+        .room-card-premium:hover .room-image {
+            transform: scale(1.15);
+        }
 
         .featured-badge {
             position: absolute;
@@ -300,7 +360,9 @@ $imageManager = new ImageManager();
             transition: border-color 0.3s;
         }
 
-        .room-card-premium:hover .premium-details { border-bottom: 4px solid #b8860b; }
+        .room-card-premium:hover .premium-details {
+            border-bottom: 4px solid #b8860b;
+        }
 
         .premium-title {
             font-size: 20px;
@@ -310,7 +372,10 @@ $imageManager = new ImageManager();
             font-family: 'Montserrat', sans-serif;
         }
 
-        .amenities-row { display: flex; gap: 15px; }
+        .amenities-row {
+            display: flex;
+            gap: 15px;
+        }
 
         .amenity-item {
             display: flex;
@@ -354,87 +419,388 @@ $imageManager = new ImageManager();
             transform: scale(1.1);
         }
 
-        .prev-btn { left: 30px; }
-        .next-btn { right: 30px; }
+        .prev-btn {
+            left: 30px;
+        }
+
+        .next-btn {
+            right: 30px;
+        }
 
         @media (max-width: 992px) {
-            .room-card-premium { flex: 0 0 450px; height: 380px; }
+            .room-card-premium {
+                flex: 0 0 450px;
+                height: 380px;
+            }
         }
 
         @media (max-width: 768px) {
-            .room-card-premium { flex: 0 0 90vw; height: 350px; }
-            .hero-main-title { font-size: 30px; }
-            .slider-btn { top: 350px; width: 40px; height: 40px; }
-            .prev-btn { left: 10px; }
-            .next-btn { right: 10px; }
-            .room-gallery-track { padding-left: 20px; gap: 15px; }
+            .room-card-premium {
+                flex: 0 0 90vw;
+                height: 350px;
+            }
+
+            .hero-main-title {
+                font-size: 30px;
+            }
+
+            .slider-btn {
+                top: 350px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .prev-btn {
+                left: 10px;
+            }
+
+            .next-btn {
+                right: 10px;
+            }
+
+            .room-gallery-track {
+                padding-left: 20px;
+                gap: 15px;
+            }
         }
 
-        /* --- FEATURES --- */
-        .features-container { width: 100%; margin: 0; padding: 0; background-color: #fff; }
-        .feature-row { display: flex; flex-wrap: wrap; width: 100%; min-height: 500px; }
-        .feature-row:nth-child(even) { flex-direction: row-reverse; }
-        .feature-half-img, .feature-half-text { flex: 1 1 50%; min-width: 300px; position: relative; }
-        .feature-half-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* --- MANILA HOTEL STYLE FEATURES (ZIG-ZAG) --- */
+        .features-container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+
+        .feature-row {
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        .feature-row:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .feature-half-img,
         .feature-half-text {
-            display: flex; flex-direction: column; justify-content: center;
-            padding: 60px 80px; box-sizing: border-box; background-color: #fff;
+            flex: 1 1 50%;
+            min-width: 300px;
+            position: relative;
         }
-        .feature-sub { color: #999; font-size: .75rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-weight: 600; }
-        .feature-title { font-size: 1.4rem; font-weight: 300; margin: 10px 0 25px 0; color: #333; line-height: 1.2; }
-        .feature-desc { line-height: 1.8; font-size: 15px; color: #666; margin-bottom: 35px; }
+
+        .feature-half-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .feature-half-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 80px;
+            box-sizing: border-box;
+            background-color: #fff;
+        }
+
+        .feature-sub {
+            color: #999;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .feature-title {
+            font-size: 1.4rem;
+            font-weight: 300;
+            margin: 10px 0 25px 0;
+            color: #333;
+            line-height: 1.2;
+        }
+
+        .feature-desc {
+            line-height: 1.8;
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 35px;
+        }
+
         .feature-btn {
-            padding: 12px 35px; background-color: transparent; color: #b8860b;
-            text-decoration: none; display: inline-block; font-size: 13px;
-            letter-spacing: 1px; border: 1px solid #b8860b; transition: all 0.3s ease;
-            align-self: flex-start; text-transform: uppercase; font-weight: 600;
+            padding: 12px 35px;
+            background-color: transparent;
+            color: #b8860b;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 13px;
+            letter-spacing: 1px;
+            border: 1px solid #b8860b;
+            transition: all 0.3s ease;
+            align-self: flex-start;
+            text-transform: uppercase;
+            font-weight: 600;
         }
-        .feature-btn:hover { background-color: #b8860b; color: #fff; }
+
+        .feature-btn:hover {
+            background-color: #b8860b;
+            color: #fff;
+        }
 
         @media (max-width: 992px) {
-            .feature-row, .feature-row:nth-child(even) { flex-direction: column; }
-            .feature-half-text { padding: 40px 30px; }
-            .feature-half-img { height: 350px; }
-            .feature-title { font-size: 1.5rem; }
+
+            .feature-row,
+            .feature-row:nth-child(even) {
+                flex-direction: column;
+            }
+
+            .feature-half-img,
+            .feature-half-text {
+                flex: 1 1 100%;
+                min-width: 100%;
+            }
+
+            .feature-half-text {
+                padding: 40px 30px;
+            }
+
+            .feature-half-img {
+                height: 350px;
+            }
+
+            .feature-title {
+                font-size: 1.5rem;
+            }
         }
 
-        /* --- NEWS SECTION --- */
-        .news-section { padding-block: 60px 50px; padding-inline: 80px; background-color: #fff; }
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 50px; }
+        /* --- EVENT PLACE CSS --- */
+        .event-place {
+            padding: 80px 5%;
+            text-align: center;
+            background: #fff;
+        }
+
+        .event-card {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 500px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .event-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .event-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 40px;
+            box-sizing: border-box;
+            color: white;
+            text-align: left;
+        }
+
+        .event-overlay h3 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .event-overlay p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .contact-number {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #b8860b;
+            margin-bottom: 30px !important;
+        }
+
+        /* --- NEWS / BLOG SECTION --- */
+        .news-section {
+            padding-inline:  80px;
+            background-color: #fff;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
         .news-card {
-            background: #fff; border-radius: 8px; overflow: hidden;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease; border: 1px solid #f0f0f0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #f0f0f0;
         }
-        .news-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1); }
-        .news-img-container { height: 220px; width: 100%; overflow: hidden; }
-        .news-img-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-        .news-card:hover .news-img-container img { transform: scale(1.1); }
-        .news-content { padding: 25px; }
-        .news-date { font-size: 0.75rem; color: #b8860b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; display: block; }
-        .news-title { font-size: 1.2rem; color: #333; margin-bottom: 15px; line-height: 1.4; font-weight: 600; }
-        .news-excerpt { font-size: 0.9rem; color: #666; line-height: 1.6; margin-bottom: 20px; }
-        .read-more-link {
-            text-decoration: none; color: #333; font-weight: 600; font-size: 0.85rem;
-            border-bottom: 2px solid #b8860b; padding-bottom: 2px; transition: color 0.3s;
-        }
-        .read-more-link:hover { color: #b8860b; }
 
-        /* --- FEEDBACK SECTION --- */
-        .feedback-section { padding: 80px 7%; background-color: #f8f5f0; text-align: center; }
-        .feedback-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 50px; }
-        .feedback-card {
-            background: #fff; padding: 40px; border-radius: 4px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03); text-align: left;
-            position: relative; border-top: 3px solid #b8860b;
+        .news-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
         }
-        .quote-icon { font-size: 40px; color: #eee; position: absolute; top: 20px; right: 30px; }
-        .stars { color: #b8860b; margin-bottom: 20px; font-size: 14px; }
-        .feedback-text { font-size: 1rem; color: #555; line-height: 1.8; font-style: italic; margin-bottom: 25px; }
-        .client-info { display: flex; align-items: center; gap: 15px; }
-        .client-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background-color: #ddd; }
-        .client-details h4 { font-size: 0.95rem; margin: 0; color: #333; font-weight: 700; }
-        .client-details span { font-size: 0.8rem; color: #999; }
+
+        .news-img-container {
+            height: 220px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .news-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .news-card:hover .news-img-container img {
+            transform: scale(1.1);
+        }
+
+        .news-content {
+            padding: 25px;
+        }
+
+        .news-date {
+            font-size: 0.75rem;
+            color: #b8860b;
+            /* Gold accent */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .news-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.4;
+            font-weight: 600;
+        }
+
+        .news-excerpt {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .read-more-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-bottom: 2px solid #b8860b;
+            padding-bottom: 2px;
+            transition: color 0.3s;
+        }
+
+        .read-more-link:hover {
+            color: #b8860b;
+        }
+
+        /* --- CUSTOMER FEEDBACK SECTION --- */
+        .feedback-section {
+            padding: 80px 7%;
+            background-color: #f9f9f9;
+            /* Slight contrast from white sections */
+            text-align: center;
+        }
+
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feedback-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 4px;
+            /* Sharper corners for luxury feel */
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
+            text-align: left;
+            position: relative;
+            border-top: 3px solid #b8860b;
+            /* Gold top border */
+        }
+
+        .quote-icon {
+            font-size: 40px;
+            color: #eee;
+            position: absolute;
+            top: 20px;
+            right: 30px;
+        }
+
+        .stars {
+            color: #b8860b;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .feedback-text {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.8;
+            font-style: italic;
+            margin-bottom: 25px;
+        }
+
+        .client-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .client-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+
+        .client-details h4 {
+            font-size: 0.95rem;
+            margin: 0;
+            color: #333;
+            font-weight: 700;
+        }
+
+        .client-details span {
+            font-size: 0.8rem;
+            color: #999;
+        }
     </style>
 </head>
 
@@ -449,11 +815,13 @@ $imageManager = new ImageManager();
             </div>
         </div>
         <nav>
+            <!-- <a href="testing.php">Home</a> Link back to home -->
             <a href="#" class="active">Dining</a>
             <a href="#">Reservations</a>
-            
-            <a href="check_availability.php" class="btn-header-book desktop-icons">Book Now</a>
-
+            <div class="nav-icons desktop-icons">
+                <div class="icon-circle"><i class="fa-solid fa-user"></i></div>
+                <div class="icon-circle"><i class="fa-solid fa-shopping-cart"></i></div>
+            </div>
             <div class="burger-menu">
                 <i class="fa-solid fa-bars"></i>
             </div>
@@ -467,18 +835,23 @@ $imageManager = new ImageManager();
         </div>
     </section>
 
-    <section class="intro-elegant" id="about">
-        <div class="intro-elegant-container">
-            <h2 class="intro-elegant-title">Welcome to AMV Hotel</h2>
+    <section class="intro-luxury" id="about">
+        <div class="intro-luxury-content">
+            <div class="intro-text-block">
+                <h2>AMV Hotel</h2>
 
-            <p class="intro-elegant-text">
-                AMV Hotel is a property of many firsts — The "True Heart of Mamburao" is delighted to welcome you.
-                Experience luxury and comfort combined with our world-class Filipino hospitality.
-                Our hotel is an invitation for guests to project their personalities and preferences
-                onto the space so that they can truly call the experience their own.
-            </p>
+                <h3>The True Heart of Mamburao</h3>
 
-            <a href="about_us.php" class="btn-outline-gold">LEARN MORE</a>
+                <div class="intro-action-row">
+                    <a href="room_booking.php" class="btn-transparent">Book now</a>
+
+                    <div class="intro-desc-small">
+                        Mabuhay! The "True Heart of Mamburao" is delighted to welcome you.
+                        Experience luxury and comfort combined with our world-class Filipino hospitality.
+                        For more information, call +632 85270011.
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -495,7 +868,7 @@ $imageManager = new ImageManager();
                     stringent sanitation procedures in preparing our rooms for guests so you can stay with us with peace
                     of mind.
                 </p>
-                <a href="check_availability.php" class="feature-btn">Reservations</a>
+                <a href="#rooms" class="feature-btn">Reservations</a>
             </div>
         </div>
 
@@ -511,7 +884,7 @@ $imageManager = new ImageManager();
                     traditional favorites to innovative dishes, our restaurants offer an unparalleled gastronomic
                     journey.
                 </p>
-                <a href="menu.php" class="feature-btn">View Menu</a>
+                <a href=".foods" class="feature-btn">View Menu</a>
             </div>
         </div>
 
@@ -564,7 +937,8 @@ $imageManager = new ImageManager();
                         <div class="room-gallery-track" id="track">
                             <?php foreach ($rooms as $index => $room): ?>
 
-                                <div class="room-card-premium"
+                                <a href="room_booking.php?room_name=<?php echo urlencode($room['image_name']); ?>"
+                                    class="room-card-premium"
                                     data-room-name="<?php echo htmlspecialchars($room['image_name']); ?>">
 
                                     <div class="premium-img-wrapper">
@@ -585,10 +959,11 @@ $imageManager = new ImageManager();
                                         <div class="amenities-row">
                                             <div class="amenity-item"><i class="fa-solid fa-wifi"></i> <span>WIFI</span></div>
                                             <div class="amenity-item"><i class="fa-solid fa-bed"></i> <span>KING</span></div>
-                                            <div class="amenity-item"><i class="fa-solid fa-maximize"></i> <span>35SQM</span></div>
+                                            <div class="amenity-item"><i class="fa-solid fa-maximize"></i> <span>35SQM</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                </a>
 
                             <?php endforeach; ?>
                         </div>
@@ -597,6 +972,25 @@ $imageManager = new ImageManager();
             </div>
         </div>
     </section>
+
+    <!-- <section class="event-place">
+        <h2 class="section-title">Event Place</h2>
+        <p class="section-subtitle">Host your memorable events with us at AMV Hotel.</p>
+
+        <div class="event-card">
+            <img src="../../IMG/room_1.jpg" alt="Event Place">
+            <div class="event-overlay">
+                <h3>Grand Event Hall</h3>
+                <p>
+                    Perfect for weddings, conferences, and special gatherings.
+                    Spacious, elegant, and equipped with modern facilities.
+                </p>
+                <p class="contact-number">📞 +63 912 345 6789</p>
+                <a href="#" class="btn" style="background-color: #b8860b; color: white; border: none;">Contact Us
+                    Now</a>
+            </div>
+        </div>
+    </section> -->
 
     <section class="news-section" id="news">
         <div style="text-align: center; max-width: 800px; margin: 0 auto;">
@@ -717,6 +1111,17 @@ $imageManager = new ImageManager();
             </div>
         </div>
     </section>
+
+    ```
+
+    <!-- ### Tips for Implementation:
+    1. **Images:** In the HTML above, I used your existing images (`../../IMG/room_7.jpg`, etc.) as placeholders. You
+    should replace these with actual news thumbnails.
+    2. **Responsiveness:** The CSS uses `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));`. This
+    automatically stacks the cards into a single column on mobile phones and expands to 3 columns on desktop, so no
+    extra media queries are needed.
+    3. **Avatars:** I used a free service (`ui-avatars.com`) to generate initials for the reviews so it looks good
+    immediately without you needing to upload user photos. -->
 
     <footer>
         <p>&copy; 2025 AMV Hotel. All rights reserved.</p>
@@ -839,9 +1244,8 @@ $imageManager = new ImageManager();
                             const filePath = room.file_path ? room.file_path.toString().trim() : '';
                             const imgSrc = IMG_BASE_PATH + filePath + '?v=' + Date.now();
 
-                            // Changed to create div instead of a
-                            const card = document.createElement('div');
-                            // Removed href assignment
+                            const card = document.createElement('a');
+                            card.href = `room_booking.php?room_name=${encodeURIComponent(id)}`;
                             card.className = 'room-card-premium';
                             card.setAttribute('data-room-name', id);
                             card.innerHTML = `

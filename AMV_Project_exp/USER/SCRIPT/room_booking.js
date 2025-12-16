@@ -10,6 +10,10 @@
         const totalAmount = document.querySelector('.total-amount');
         const bookingForm = document.getElementById('bookingForm');
 
+        // --- NEW: Elements for Hidden Inputs (Required for PHP) ---
+        const totalPriceInput = document.getElementById('totalPriceInput');
+        const nightsInput = document.getElementById('nightsInput');
+
         // Set minimum date to today
         const today = new Date();
         const tomorrow = new Date(today);
@@ -25,11 +29,27 @@
 
             if (checkIn && checkOut && checkOut > checkIn) {
                 const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                const total = nights * pricePerNight;
+
+                // Update Visuals
                 nightsInfo.textContent = `${nights} night${nights !== 1 ? 's' : ''}`;
-                totalAmount.textContent = `₱${(nights * pricePerNight).toLocaleString()}`;
+                totalAmount.textContent = `₱${total.toLocaleString()}`;
+
+                // --- UPDATE: Fill Hidden Inputs for PHP ---
+                if (nightsInput) nightsInput.value = nights;
+                if (totalPriceInput) totalPriceInput.value = total;
+
+                return true; // Valid calculation
             } else {
+                // Reset Visuals
                 nightsInfo.textContent = '0 nights';
                 totalAmount.textContent = '₱0';
+
+                // --- UPDATE: Reset Hidden Inputs ---
+                if (nightsInput) nightsInput.value = 0;
+                if (totalPriceInput) totalPriceInput.value = 0;
+
+                return false; // Invalid calculation
             }
         }
 
@@ -58,7 +78,7 @@
 
         checkOutInput.addEventListener('change', calculateTotal);
 
-        // Calendar functionality
+        // Calendar functionality (UNCHANGED)
         let currentDate = new Date(2025, 4, 1); // May 2025
         let currentDate2 = new Date(2025, 5, 1); // June 2025
 
@@ -135,20 +155,19 @@
             renderCalendar(currentDate2, 'calendarGrid2', 'currentMonth2');
         });
 
-        // Form submission
+        // --- UPDATED: Form submission ---
         bookingForm.addEventListener('submit', function (e) {
-            e.preventDefault();
+            // 1. Recalculate to ensure data is fresh and valid
+            const isValid = calculateTotal();
 
-            // Get form values
-            const checkIn = checkInInput.value;
-            const checkOut = checkOutInput.value;
-            const adults = adultsSelect.value;
-            const children = childrenSelect.value;
-
-            // In a real application, you would send this data to the server
-            alert(`Booking submitted!\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}\nAdults: ${adults}\nChildren: ${children}`);
-
-            // Reset form
-            bookingForm.reset();
-            calculateTotal();
+            // 2. Check validity
+            if (!isValid) {
+                // Only stop the redirect if the dates are invalid
+                e.preventDefault(); 
+                alert('Please select valid Check-in and Check-out dates.');
+            }
+            
+            // 3. IF VALID: We do NOTHING here. 
+            // The "e.preventDefault()" is NOT called, so the form submits 
+            // and the browser redirects to guest_information.php
         });

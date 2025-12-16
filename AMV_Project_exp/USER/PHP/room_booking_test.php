@@ -43,7 +43,7 @@ if (!$room) {
     http_response_code(404);
     ?>
     <!doctype html>
-    <html>
+    <html lang="en">
 
     <head>
         <meta charset="utf-8">

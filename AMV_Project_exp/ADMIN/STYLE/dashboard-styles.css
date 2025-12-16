@@ -394,9 +394,9 @@ button {
     box-sizing: border-box;
 }
 
-.charts-grid-dashboard .chart-card {
+/* .charts-grid-dashboard .chart-card {
     min-height: 420px;
-}
+} */
 
 .chart-card {
     background: white;
@@ -405,7 +405,7 @@ button {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid #e2e8f0;
     min-width: 0;
-    min-height: 320px;
+    /* min-height: 320px; */
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -795,7 +795,9 @@ button {
     position: absolute;
     background: #fff;
     border-radius: 10px;
-    width: min(auto, 94vw);
+    /* width: min(auto, 94vw);
+     */
+    min-width: 450px;
     max-height: fit-content;
     /* text-align: center; */
     overflow: auto;
@@ -1368,11 +1370,11 @@ th {
     border: 1.5px solid #cbd5e1;
     border-radius: 12px;
     padding: 18px 20px;
-    margin-bottom: 18px;
+    /* margin-bottom: 18px; */
     box-shadow: 0 2px 8px 0 rgba(30, 41, 59, 0.06);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    /* align-items: flex-start; */
 }
 
 #calendarModal .room-box:last-child {

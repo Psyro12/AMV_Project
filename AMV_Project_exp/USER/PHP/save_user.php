@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     exit();
 }
 
-require "db_connect.php";
+require '../DB-CONNECTIONS/db_connect.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 
